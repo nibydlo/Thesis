@@ -31,3 +31,9 @@ def plot_conf_int(stat, stat_name):
         label=stat_name,
         alpha=0.7
     )
+
+
+def plot_single(accs, name):
+    xs_entropy_sbc = [e[0] for e in accs]
+    ys_entropy_sbc = [e[1] for e in accs]
+    plt.plot(xs_entropy_sbc, ys_entropy_sbc, label=name)

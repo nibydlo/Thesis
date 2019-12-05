@@ -1,4 +1,5 @@
 import math
+import numpy as np
 
 
 def query_default(model, x_train, labeled, batch_size, reshape_f):
@@ -42,3 +43,25 @@ def query_uncert_2(model, x_train, labeled, batch_size, reshape_f):
 
 def query_entropy(model, x_train, labeled, batch_size, reshape_f):
     return query_uncert(model, x_train, labeled, batch_size, f_entropy, reshape_f)
+
+
+def query_uncert_sud(model, x_train, x_encoded, labeled, batch_size, uncert_f, reshape_f, mass_center):
+    pre_batch = []
+    for i in range(len(x_train)):
+        if not labeled[i]:
+            p = model.predict_proba(reshape_f(x_train[i]))
+            sim = 1 / np.linalg.norm(x_encoded[i] - mass_center)
+            pre_batch.append((uncert_f(p.flatten()) * sim, i))
+    return [i for (p, i) in sorted(pre_batch)[::-1][:batch_size]]
+
+
+def query_uncert_1_sud(model, x_train, x_encoded, labeled, batch_size, reshape_f, mass_center):
+    return query_uncert_sud(model, x_train, x_encoded, labeled, batch_size, f1, reshape_f, mass_center)
+
+
+def query_uncert_2_sud(model, x_train, x_encoded, labeled, batch_size, reshape_f, mass_center):
+    return query_uncert_sud(model, x_train, x_encoded, labeled, batch_size, f2, reshape_f, mass_center)
+
+
+def query_entropy_sud(model, x_train, x_encoded, labeled, batch_size, reshape_f, mass_center):
+    return query_uncert_sud(model, x_train, x_encoded, labeled, batch_size, f_entropy, reshape_f, mass_center)
