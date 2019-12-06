@@ -1,6 +1,5 @@
 from utils import cut_ds
 import init_generators as igen
-import encoders
 
 from keras.callbacks import EarlyStopping
 import numpy as np
@@ -12,14 +11,13 @@ def run_AL(
         reshape_f,
         score_f,
         x_train, y_train, x_test, y_test,
-        init_size, batch_size, total_size, query_number
+        init_size, batch_size, total_size, query_number, random_state
 ):
-    x_train, y_train = cut_ds(total_size, x_train, y_train)
-    labeled, x_train_labeled, y_train_labeled = igen.default_init(x_train, y_train, init_size)
+    x_train, y_train = cut_ds(total_size, x_train, y_train, random_state)
 
-    model = create_model()
-    es = EarlyStopping(monitor='val_accuracy', mode='max', min_delta=0.001, patience=3)
-    model.fit(x_train_labeled, y_train_labeled, validation_data=(x_test, y_test), epochs=20, callbacks=[es], verbose=0)
+    labeled, x_train_labeled, y_train_labeled, model = default_init(
+        x_train, y_train, x_test, y_test, init_size, create_model
+    )
 
     return default_learner(x_train, y_train,
                            labeled, x_train_labeled, y_train_labeled,
@@ -34,15 +32,14 @@ def run_AL_SBC(
         reshape_f,
         score_f,
         x_train, y_train, x_test, y_test,
-        init_size, batch_size, total_size, query_number,
-        encoder=encoders.get_mnist_encoder()
+        init_size, batch_size, total_size, query_number, random_state,
+        encoder
 ):
-    x_train, y_train = cut_ds(total_size, x_train, y_train)
-    labeled, x_train_labeled, y_train_labeled = igen.cluster_init(x_train, y_train, init_size, encoder)
+    x_train, y_train = cut_ds(total_size, x_train, y_train, random_state)
 
-    model = create_model()
-    es = EarlyStopping(monitor='val_accuracy', mode='max', min_delta=0.001, patience=3)
-    model.fit(x_train_labeled, y_train_labeled, validation_data=(x_test, y_test), epochs=20, callbacks=[es], verbose=0)
+    labeled, x_train_labeled, y_train_labeled, model = sbc_init(
+        x_train, y_train, x_test, y_test, init_size, encoder, create_model
+    )
 
     return default_learner(x_train, y_train,
                            labeled, x_train_labeled, y_train_labeled,
@@ -57,15 +54,14 @@ def run_AL_SUD(
         reshape_f,
         score_f,
         x_train, y_train, x_test, y_test,
-        init_size, batch_size, total_size, query_number,
-        encoder=encoders.get_mnist_encoder()
+        init_size, batch_size, total_size, query_number, random_state,
+        encoder
 ):
-    x_train, y_train = cut_ds(total_size, x_train, y_train)
-    labeled, x_train_labeled, y_train_labeled = igen.default_init(x_train, y_train, init_size)
+    x_train, y_train = cut_ds(total_size, x_train, y_train, random_state)
 
-    model = create_model()
-    es = EarlyStopping(monitor='val_accuracy', mode='max', min_delta=0.001, patience=3)
-    model.fit(x_train_labeled, y_train_labeled, validation_data=(x_test, y_test), epochs=20, callbacks=[es], verbose=0)
+    labeled, x_train_labeled, y_train_labeled, model = default_init(
+        x_train, y_train, x_test, y_test, init_size, create_model
+    )
 
     return sud_learner(x_train, y_train,
                        labeled, x_train_labeled, y_train_labeled,
@@ -80,21 +76,36 @@ def run_AL_SBC_SUD(
         reshape_f,
         score_f,
         x_train, y_train, x_test, y_test,
-        init_size, batch_size, total_size, query_number,
-        encoder=encoders.get_mnist_encoder()
+        init_size, batch_size, total_size, query_number, random_state,
+        encoder
 ):
-    x_train, y_train = cut_ds(total_size, x_train, y_train)
-    labeled, x_train_labeled, y_train_labeled = igen.cluster_init(x_train, y_train, init_size, encoder)
+    x_train, y_train = cut_ds(total_size, x_train, y_train, random_state)
 
-    model = create_model()
-    es = EarlyStopping(monitor='val_accuracy', mode='max', min_delta=0.001, patience=3)
-    model.fit(x_train_labeled, y_train_labeled, validation_data=(x_test, y_test), epochs=20, callbacks=[es], verbose=0)
+    labeled, x_train_labeled, y_train_labeled, model = sbc_init(
+        x_train, y_train, x_test, y_test, init_size, encoder, create_model
+    )
 
     return sud_learner(x_train, y_train,
                        labeled, x_train_labeled, y_train_labeled,
                        x_test, y_test,
                        encoder, init_size, score_f, query_number, query_f, model, batch_size, reshape_f
                        )
+
+
+def sbc_init(x_train, y_train, x_test, y_test, init_size, encoder, create_model):
+    labeled, x_train_labeled, y_train_labeled = igen.cluster_init(x_train, y_train, init_size, encoder)
+    model = create_model()
+    es = EarlyStopping(monitor='val_accuracy', mode='max', min_delta=0.001, patience=3)
+    model.fit(x_train_labeled, y_train_labeled, validation_data=(x_test, y_test), epochs=20, callbacks=[es], verbose=0)
+    return labeled, x_train_labeled, y_train_labeled, model
+
+
+def default_init(x_train, y_train, x_test, y_test, init_size, create_model):
+    labeled, x_train_labeled, y_train_labeled = igen.default_init(x_train, y_train, init_size)
+    model = create_model()
+    es = EarlyStopping(monitor='val_accuracy', mode='max', min_delta=0.001, patience=3)
+    model.fit(x_train_labeled, y_train_labeled, validation_data=(x_test, y_test), epochs=20, callbacks=[es], verbose=0)
+    return labeled, x_train_labeled, y_train_labeled, model
 
 
 def sud_learner(x_train, y_train,
