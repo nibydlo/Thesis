@@ -5,6 +5,7 @@ import numpy as np
 
 
 def get_mnist_encoder():
+    print("=== Preparing MNIST encoder ===")
     (x_train_mnist, y_train_mnist), (x_test_mnist, y_test_mnist) = tf.keras.datasets.mnist.load_data()
     x_train_mnist = x_train_mnist.reshape(x_train_mnist.shape[0], 28, 28, 1)
     x_train_mnist = x_train_mnist.astype('float32')
@@ -29,7 +30,10 @@ def get_mnist_encoder():
     return autoencoder
 
 
+mnist_encoder = get_mnist_encoder()
+
 def get_fmnist_encoder():
+    print("=== Preparing FMNIST encoder ===")
     (x_train_fmnist, y_train_fmnist), (x_test_fmnist, y_test_fmnist) = tf.keras.datasets.fashion_mnist.load_data()
     x_train_fmnist = x_train_fmnist.reshape(x_train_fmnist.shape[0], 28, 28, 1)
     x_train_fmnist = x_train_fmnist.astype('float32')

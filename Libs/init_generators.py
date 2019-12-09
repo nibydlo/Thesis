@@ -25,17 +25,17 @@ def cluster_init(x, y, init_size, encoder):
     is_init = [False for _ in range(len(x))]
     for c in closest:
         is_init[c[0]] = True
-    x_labeled, y_labeled = common_init(x, y, is_init)
+    x_labeled, y_labeled = extract_labeled(is_init, x, y)
     return is_init, x_labeled, y_labeled
 
 
 def default_init(x, y, init_size):
     is_init = [True if i < init_size else False for i in range(len(x))]
-    x_labeled, y_labeled = common_init(x, y, is_init)
+    x_labeled, y_labeled = extract_labeled(is_init, x, y)
     return is_init, x_labeled, y_labeled
 
 
-def common_init(x_train, y_train, is_init):
-    x_train_labeled = np.array([x_train[i] for i in range(len(x_train)) if is_init[i]])
-    y_train_labeled = np.array([y_train[i] for i in range(len(y_train)) if is_init[i]])
-    return x_train_labeled, y_train_labeled
+def extract_labeled(is_labeled, x, y):
+    x = np.array([x[i] for i in range(len(x)) if is_labeled[i]])
+    y = np.array([y[i] for i in range(len(y)) if is_labeled[i]])
+    return x, y

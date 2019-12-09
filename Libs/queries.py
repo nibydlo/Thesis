@@ -41,7 +41,7 @@ def query_uncert_2(model, x_train, labeled, batch_size, reshape_f):
     return query_uncert(model, x_train, labeled, batch_size, f2, reshape_f)
 
 
-def query_entropy(model, x_train, labeled, batch_size, reshape_f):
+def query_entropy(model, x_train, labeled, batch_size, reshape_f=(lambda x: np.expand_dims(x, axis=0))):
     return query_uncert(model, x_train, labeled, batch_size, f_entropy, reshape_f)
 
 
@@ -63,5 +63,5 @@ def query_uncert_2_sud(model, x_train, x_encoded, labeled, batch_size, reshape_f
     return query_uncert_sud(model, x_train, x_encoded, labeled, batch_size, f2, reshape_f, mass_center)
 
 
-def query_entropy_sud(model, x_train, x_encoded, labeled, batch_size, reshape_f, mass_center):
+def query_entropy_sud(model, x_train, x_encoded, labeled, batch_size,  mass_center, reshape_f=(lambda x: np.expand_dims(x, axis=0))):
     return query_uncert_sud(model, x_train, x_encoded, labeled, batch_size, f_entropy, reshape_f, mass_center)

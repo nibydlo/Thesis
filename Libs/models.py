@@ -2,7 +2,10 @@ import tensorflow as tf
 from keras.models import Sequential
 from keras.layers import Dense, Conv2D, Dropout, Flatten, MaxPooling2D
 
+
 mnist_input_shape = (28, 28, 1)
+
+
 def create_sequential_model():
     model = Sequential()
     model.add(Conv2D(28, kernel_size=(3,3), input_shape=mnist_input_shape))
