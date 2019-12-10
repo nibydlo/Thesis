@@ -3,16 +3,9 @@ from sklearn.utils import shuffle
 import random
 from keras.callbacks import EarlyStopping
 import progressbar
-import math
 
 from queries import query_entropy, query_entropy_sud
 import init_generators
-
-
-def extract_labeled(is_labeled, x, y):
-    x = np.array([x[i] for i in range(len(x)) if is_labeled[i]])
-    y = np.array([y[i] for i in range(len(y)) if is_labeled[i]])
-    return x, y
 
 
 def cut_ds(short_size, x, y, random_s):
@@ -20,10 +13,6 @@ def cut_ds(short_size, x, y, random_s):
     x_shuffled = x_shuffled[:short_size]
     y_shuffled = y_shuffled[:short_size]
     return x_shuffled, y_shuffled
-
-
-def f_entropy(p):
-    return -1 * sum([e * math.log((e + math.pow(10, -10))) for e in p])
 
 
 class AbstractLearner:
@@ -89,14 +78,12 @@ class AbstractLearner:
 
     def get_labeled_set(self, init_size, x, y):
         print("=== preparing standard labeled data ===")
-        is_init = [True if i < init_size else False for i in range(len(x))]
-        x_labeled, y_labeled = extract_labeled(is_init, x, y)
-        return is_init, x_labeled, y_labeled
+        return init_generators.default_init(x, y, init_size)
 
     def query_process(self, x, y, labeled, x_labeled, y_labeled, val_data, model):
         self.stat = []
         if val_data is not None:
-            self.acc_growth.append((x_labeled.shape[0], model.evaluate(val_data[0], val_data[1], verbose=0)[1]))
+            self.stat.append((x_labeled.shape[0], model.evaluate(val_data[0], val_data[1], verbose=0)[1]))
         print("=== uncertainty only learning started === ")
         with progressbar.ProgressBar(maxval=self.queries_number, redirect_stdout=True) as bar:
             for i in range(self.queries_number):
@@ -107,7 +94,7 @@ class AbstractLearner:
                     labeled[j] = True
                 model.fit(x_labeled, y_labeled, validation_data=val_data, verbose=0)
                 if val_data is not None:
-                    self.acc_growth.append((x_labeled.shape[0], model.evaluate(val_data[0], val_data[1], verbose=0)[1]))
+                    self.stat.append((x_labeled.shape[0], model.evaluate(val_data[0], val_data[1], verbose=0)[1]))
                 bar.update(i)
         print("=== uncertainty only learning finished ===")
 
@@ -154,8 +141,6 @@ class SbcLearner(AbstractLearnerDecorator):
     def __init__(self, decorated_learner, encoder):
         AbstractLearnerDecorator.__init__(self, decorated_learner)
         self.encoder = encoder
-        # self.query_process = decorated_learner.query_process
-        #decorated_learner.put_encoder(encoder)
         decorated_learner.put_get_labeled(self.get_labeled_set)
 
     def get_labeled_set(self, init_size, x, y):
@@ -168,8 +153,6 @@ class SudLearner(AbstractLearnerDecorator):
     def __init__(self, decorated_learner, encoder):
         AbstractLearnerDecorator.__init__(self, decorated_learner)
         self.encoder = encoder
-        # self.get_labeled_set = decorated_learner.get_labeled_set
-        #decorated_learner.put_encoder(encoder)
         decorated_learner.put_query_process(self.query_process)
 
     def query_process(self, x, y, labeled, x_labeled, y_labeled, val_data, model):
