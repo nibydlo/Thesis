@@ -2,7 +2,7 @@ from keras.layers import Input, Dense
 from keras.models import Model
 import tensorflow as tf
 import numpy as np
-
+from enum import Enum
 
 def get_mnist_encoder():
     print("=== Preparing MNIST encoder ===")
@@ -24,13 +24,16 @@ def get_mnist_encoder():
     autoencoder.fit(x_train_mnist_reshaped, x_train_mnist_reshaped,
                     epochs=50,
                     batch_size=256,
-                    shuffle=True,
+                    #shuffle=True,
                     validation_data=(x_test_mnist_reshaped, x_test_mnist_reshaped), verbose=0)
     autoencoder.layers.pop()
     return autoencoder
 
 
-mnist_encoder = get_mnist_encoder()
+def get_mnist_encoder_2():
+    encoder = get_mnist_encoder()
+    return Model(encoder.input, encoder.layers[-1].output)
+
 
 def get_fmnist_encoder():
     print("=== Preparing FMNIST encoder ===")
@@ -56,5 +59,36 @@ def get_fmnist_encoder():
                     validation_data=(x_test_fmnist_reshaped, x_test_fmnist_reshaped), verbose=0)
     autoencoder.layers.pop()
     return autoencoder
+
+
+def get_fmnist_encoder_2():
+    encoder = get_fmnist_encoder()
+    return Model(encoder.input, encoder.layers[-1].output)
+
+
+class Encoders(Enum):
+    mnist_1 = get_mnist_encoder
+    mnist_2 = get_mnist_encoder_2
+    fmnist_1 = get_fmnist_encoder
+    fmnist_2 = get_fmnist_encoder_2
+
+    def get_by_name(name):
+        if name == 'mnist_1':
+            return Encoders.mnist_1
+        if name == 'mnist_2':
+            return Encoders.mnist_2
+        if name == 'fmnist_1':
+            return Encoders.fmnist_1
+        if name == 'fmnist_2':
+            return Encoders.fmnist_2
+        return None
+
+
+
+
+
+
+
+
 
 

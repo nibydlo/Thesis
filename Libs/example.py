@@ -5,8 +5,9 @@ import encoders
 
 
 simple_learner = learners.EntropyLearner()
-sud_learner = learners.SudLearner(simple_learner, encoders.mnist_encoder)
-sbc_sud_learner = learners.SbcLearner(sud_learner, encoders.mnist_encoder)
+encoder = encoders.get_mnist_encoder()
+sud_learner = learners.SudLearner(simple_learner, encoder)
+sbc_sud_learner = learners.SbcLearner(sud_learner, encoder)
 sbc_sud_learner.compile(init_size=2000,
             train_size=10000,
             queries_number=5,
@@ -18,6 +19,7 @@ x_train_mnist, y_train_mnist, x_test_mnist, y_test_mnist = ds.get_mnist()
 
 from models import create_sequential_model
 model = create_sequential_model()
+
 
 sbc_sud_learner.learn(model, x_train_mnist, y_train_mnist, validation_data=(x_test_mnist, y_test_mnist))
 

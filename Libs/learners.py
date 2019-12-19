@@ -110,7 +110,7 @@ class EntropyLearner(AbstractLearner):
 
         x, y = cut_ds(train_size, x, y, self.random_state)
         is_labeled, x_labeled, y_labeled = self.get_labeled_set(init_size, x, y)
-
+        print("labeled sum:", np.sum(x_labeled))
         print("=== preparing initial model ===")
         es = EarlyStopping(monitor='val_accuracy', mode='max', min_delta=0.001, patience=3)
         model.fit(x_labeled, y_labeled, validation_data=validation_data, epochs=20, callbacks=[es], verbose=0)
