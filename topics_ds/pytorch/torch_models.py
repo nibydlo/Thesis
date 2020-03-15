@@ -25,10 +25,13 @@ def fit_topics_model(model, optimizer, train_loader, val_loader, scheduler=None,
             loss_count += 1
 
             optimizer.step()
+            if scheduler is not None:
+                scheduler.step()
 
         print('epoch:', epoch, 'train_loss:', loss, 'average train loss', loss_sum / loss_count)
-        writer.add_scalar('train_loss', loss, epoch)
-        writer.add_scalar('avg_train_loss', loss_sum / loss_count, epoch)
+        if writer is not None:
+            writer.add_scalar('train_loss', loss, epoch)
+            writer.add_scalar('avg_train_loss', loss_sum / loss_count, epoch)
 
         model.eval()
 
@@ -49,8 +52,9 @@ def fit_topics_model(model, optimizer, train_loader, val_loader, scheduler=None,
                     total += 1
 
         print('val_acc:', correct / total, 'val_avg_loss:', loss_sum / loss_count)
-        writer.add_scalar('val_acc', correct / total, epoch)
-        writer.add_scalar('val_avg_loss', loss_sum / loss_count, epoch)
+        if writer is not None:
+            writer.add_scalar('val_acc', correct / total, epoch)
+            writer.add_scalar('val_avg_loss', loss_sum / loss_count, epoch)
 
 
 class NormModel(nn.Module):
