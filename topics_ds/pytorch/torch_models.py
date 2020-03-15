@@ -2,13 +2,12 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-
 IMG_LEN = 1024
 TXT_LEN = 300
 N_CLASSES = 50
 
 
-def fit_topics_model(model, optimizer, train_loader, val_loader, scheduler=None, writer=None, epochs=1):
+def fit_topics_model(model, optimizer, train_loader, val_loader=None, scheduler=None, writer=None, epochs=1):
     for epoch in range(epochs):
         model.train()
 
@@ -17,7 +16,7 @@ def fit_topics_model(model, optimizer, train_loader, val_loader, scheduler=None,
 
         for x_img_cur, x_txt_cur, y_cur in train_loader:
             model.zero_grad()
-            output = model(x_img_cur.view(-1, IMG_LEN).float(), x_txt_cur.view(-1, TXT_LEN).float())
+            output = model(x_img_cur, x_txt_cur)
             loss = F.nll_loss(output, torch.argmax(y_cur, dim=1))
             loss.backward()
 
@@ -43,7 +42,7 @@ def fit_topics_model(model, optimizer, train_loader, val_loader, scheduler=None,
 
             with torch.no_grad():
                 for x_img_cur, x_txt_cur, y_cur in val_loader:
-                    output = model(x_img_cur.view(-1, IMG_LEN).float(), x_txt_cur.view(-1, TXT_LEN).float())
+                    output = model(x_img_cur, x_txt_cur)
                     loss = F.nll_loss(output, torch.argmax(y_cur, dim=1))
                     loss_sum += loss
                     loss_count += 1
@@ -161,7 +160,6 @@ class SelfAttentionModel1(nn.Module):
         self.dropout = nn.modules.Dropout(p=0.25)
 
     def forward(self, inp_img, inp_txt):
-
         m = inp_img.shape[0]
 
         x_img = F.relu(self.fc_img(inp_img))
@@ -176,7 +174,7 @@ class SelfAttentionModel1(nn.Module):
         k = self.fc_k(x)
         q = self.fc_q(x)
 
-        x_qk = torch.mm(q, torch.t(k)) / self.d ** (1./2)
+        x_qk = torch.mm(q, torch.t(k)) / self.d ** (1. / 2)
         a = torch.nn.Softmax(dim=0)(torch.flatten(x_qk)).view(m, m)
         f = torch.mm(a, v)
 
