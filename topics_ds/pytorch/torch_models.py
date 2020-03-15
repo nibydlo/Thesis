@@ -33,28 +33,29 @@ def fit_topics_model(model, optimizer, train_loader, val_loader, scheduler=None,
             writer.add_scalar('train_loss', loss, epoch)
             writer.add_scalar('avg_train_loss', loss_sum / loss_count, epoch)
 
-        model.eval()
+        if val_loader is not None:
+            model.eval()
 
-        correct = 0
-        total = 0
-        loss_sum = 0.0
-        loss_count = 0
+            correct = 0
+            total = 0
+            loss_sum = 0.0
+            loss_count = 0
 
-        with torch.no_grad():
-            for x_img_cur, x_txt_cur, y_cur in val_loader:
-                output = model(x_img_cur.view(-1, IMG_LEN).float(), x_txt_cur.view(-1, TXT_LEN).float())
-                loss = F.nll_loss(output, torch.argmax(y_cur, dim=1))
-                loss_sum += loss
-                loss_count += 1
-                for idx, i in enumerate(output):
-                    if torch.argmax(i) == torch.argmax(y_cur, dim=1)[idx]:
-                        correct += 1
-                    total += 1
+            with torch.no_grad():
+                for x_img_cur, x_txt_cur, y_cur in val_loader:
+                    output = model(x_img_cur.view(-1, IMG_LEN).float(), x_txt_cur.view(-1, TXT_LEN).float())
+                    loss = F.nll_loss(output, torch.argmax(y_cur, dim=1))
+                    loss_sum += loss
+                    loss_count += 1
+                    for idx, i in enumerate(output):
+                        if torch.argmax(i) == torch.argmax(y_cur, dim=1)[idx]:
+                            correct += 1
+                        total += 1
 
-        print('val_acc:', correct / total, 'val_avg_loss:', loss_sum / loss_count)
-        if writer is not None:
-            writer.add_scalar('val_acc', correct / total, epoch)
-            writer.add_scalar('val_avg_loss', loss_sum / loss_count, epoch)
+            print('val_acc:', correct / total, 'val_avg_loss:', loss_sum / loss_count)
+            if writer is not None:
+                writer.add_scalar('val_acc', correct / total, epoch)
+                writer.add_scalar('val_avg_loss', loss_sum / loss_count, epoch)
 
 
 class NormModel(nn.Module):
